@@ -1,0 +1,27 @@
+# 设置最大行宽度（默认 100），超过此宽度会自动换行
+max_width = 150
+
+# 控制函数参数布局
+# 可用选项: "Compressed", "Tall", "Vertical"
+fn_params_layout = "Compressed"
+
+# 允许函数调用保持单行
+fn_call_style = "SingleLine"
+
+# 控制函数签名格式
+fn_single_line = true
+
+# 控制结构体字面量的换行行为
+struct_lit_single_line = true
+
+# 匹配表达式（match）的换行风格
+match_arm_blocks = true
+
+match_arm_leading_pipes = "Never"
+
+# 控制链式方法调用的换行行为
+# 选项: "Off"（不换行）, "Full"（全换行）, "One"（超过限制时整体换行）
+chain_indent = "One"
+
+# 链式方法调用的宽度阈值
+chain_width = 100

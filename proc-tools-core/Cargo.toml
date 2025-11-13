@@ -1,0 +1,17 @@
+[package]
+name = "proc-tools-core"
+version = "0.1.0"
+edition = "2024"
+description = """
+过程宏工具核心
+"""
+license = "MIT"
+
+[features]
+default = ["def_cn", "sup_cn", "sup_en"]
+def_cn = []
+def_en = []
+sup_cn = []
+sup_en = []
+
+[dependencies]

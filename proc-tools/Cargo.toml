@@ -1,0 +1,24 @@
+[package]
+name = "proc-tools"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.86.0"
+description = """
+过程宏工具库
+"""
+license = "MIT"
+
+[features]
+# 语言选项（互斥，只能选一个，默认启用中文）
+lang-en = []
+lang-cn = []
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-tools-core = { path = "../proc-tools-core", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
+proc-tools-helper = { path = "../proc-tools-helper", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
+syn = { version = "2.0.106", features = ["full", "extra-traits", "parsing"] }
+quote = "1.0.40"
+proc-macro2 = "1.0.101"

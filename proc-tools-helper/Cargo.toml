@@ -1,0 +1,22 @@
+[package]
+name = "proc-tools-helper"
+version = "0.1.0"
+edition = "2024"
+description = """
+过程宏工具助手
+"""
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[features]
+default = ["def_cn", "sup_cn", "sup_en"]
+def_cn = []
+def_en = []
+sup_cn = []
+sup_en = []
+
+[dependencies]
+syn = { version = "2.0.106", features = ["full", "extra-traits"] }
+quote = "1.0.40"
