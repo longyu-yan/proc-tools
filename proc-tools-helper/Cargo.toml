@@ -6,6 +6,8 @@ description = """
 过程宏工具助手
 """
 license = "MIT"
+repository = "https://github.com/longyu-yan/proc-tools"
+homepage = "https://github.com/longyu-yan/proc-tools"
 
 [lib]
 proc-macro = true
