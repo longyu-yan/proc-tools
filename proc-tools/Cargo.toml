@@ -17,8 +17,8 @@ lang-cn = []
 proc-macro = true
 
 [dependencies]
-proc-tools-core = { path = "../proc-tools-core", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
-proc-tools-helper = { path = "../proc-tools-helper", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
+proc-tools-core = { version = "0.1.0", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
+proc-tools-helper = { version = "0.1.0", default-features = false, features = ["def_cn", "sup_cn", "sup_en"] }
 syn = { version = "2.0.106", features = ["full", "extra-traits", "parsing"] }
 quote = "1.0.40"
 proc-macro2 = "1.0.101"
