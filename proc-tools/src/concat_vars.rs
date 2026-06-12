@@ -32,7 +32,8 @@ pub(crate) fn concat_vars_implement(input: TokenStream) -> TokenStream {
             Some(ty) => first_parameter_for_concat(&tv.ident, ty, var_name),
             None => quote! {
                 let mut bytes = [0u8; 40];
-                let (mut total_len, mut #var_name)= #ident.first_parameter_for_concat(&mut bytes);
+                let #var_name = &#ident;
+                let (mut total_len, mut #var_name)= #var_name.first_parameter_for_concat(&mut bytes);
             },
         }
     } else {
@@ -48,7 +49,8 @@ pub(crate) fn concat_vars_implement(input: TokenStream) -> TokenStream {
             Some(ty) => init_concat_parameter(&tv.ident, ty, var_name),
             None => quote! {
                 let mut bytes = [0u8; 40];
-                let mut #var_name = #ident.init_concat_parameter(&mut bytes, &mut total_len);
+                let #var_name = &#ident;
+                let mut #var_name = #var_name.init_concat_parameter(&mut bytes, &mut total_len);
             },
         }
     });
@@ -109,7 +111,7 @@ impl syn::parse::Parse for TypedVar {
 
 /// 生成第一个参数的代码
 pub(crate) fn first_parameter_for_concat(ident: &Expr, ty: &syn::Type, var_name: syn::Ident) -> proc_macro2::TokenStream {
-    if is_type(ty, "String") || is_type(ty, "string") || is_type(ty, "str") || is_type(ty, "&str") {
+    if is_type(ty, "String") || is_type(ty, "string")|| is_type(ty, "&String") || is_type(ty, "str") || is_type(ty, "&str") {
         quote! {
             let mut total_len = #ident.len();
         }
@@ -187,7 +189,7 @@ pub(crate) fn first_parameter_for_concat(ident: &Expr, ty: &syn::Type, var_name:
         }
     } else if is_type(ty, "char") {
         quote! {
-            let mut bytes = [0; 4];
+            let mut bytes = [0u8; 4];
             let #var_name = #ident.encode_utf8(&mut bytes);
             let mut total_len = #var_name.len();
         }

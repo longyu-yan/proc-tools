@@ -45,21 +45,21 @@ compile_error!("Cannot enable both 'lang_cn' and 'lang_en' features simultaneous
 /// - 需要依赖库：`proc_tools_core`
 ///
 /// # 示例
-/// ```
+/// ```rust
 /// use proc_tools::concat_vars;
 /// let name = "Alice";
 /// let age = 30;
 /// let score = 95.5;
 ///
-/// /// 第一种方式：直接使用变量直接连接，简单，快速，但是会占用更多内存
-/// /// 因为宏无法稳定获取变量的数据类型，默认将会给非字符串数据类型全部分配 40 字节内存空间
-/// /// 对i8，u8，char等数据类型会浪费更多内存空间
+/// // 第一种方式：直接使用变量直接连接，简单，快速，但是会占用更多内存
+/// // 因为宏无法稳定获取变量的数据类型，默认将会给非字符串数据类型全部分配 40 字节内存空间
+/// // 对i8，u8，char等数据类型会浪费更多内存空间
 /// let result = concat_vars!(name, age, score);
 /// assert_eq!(result, "Alice3095.5");
 ///
-/// /// 第二种方式：指定变量的数据类型，宏会根据数据类型指定对应大小，例如：对 i32 分配 11 字节内存空间
-/// /// 极端情况，可用的内存较小，建议使用第二种方式
-/// /// 内存够用情况，两种方式性能相差不大，不需要太纠结
+/// // 第二种方式：指定变量的数据类型，宏会根据数据类型指定对应大小，例如：对 i32 分配 11 字节内存空间
+/// // 极端情况，可用的内存较小，建议使用第二种方式
+/// // 内存够用情况，两种方式性能相差不大，不需要太纠结
 /// let result = concat_vars!(name: String, age: i32, score: f64);
 /// assert_eq!(result, "Alice3095.5");
 /// ```
@@ -81,7 +81,8 @@ pub fn concat_vars(input: TokenStream) -> TokenStream {
 ///
 /// # 示例
 /// 对于以下结构体：
-/// ```ignore
+/// ```rust
+/// use proc_tools::New;
 /// #[derive_new]
 /// struct Point {
 ///     x: f64,
@@ -125,7 +126,8 @@ pub fn derive_new(input: TokenStream) -> TokenStream {
 /// - 所有字段必须能正确反序列化，否则返回错误
 ///
 /// # 示例
-/// ```ignore
+/// ```rust
+/// use proc_tools::ByteEncode;
 /// #[derive(ByteEncode)]
 /// struct PacketHeader {
 ///     version: u8,

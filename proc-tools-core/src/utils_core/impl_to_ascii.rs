@@ -1,18 +1,22 @@
 use crate::float2str::pretty::{format32, format64};
 
-const I82STR_LEN: usize = 4;
-const I162STR_LEN: usize = 6;
-const I322STR_LEN: usize = 11;
-const I642STR_LEN: usize = 20;
-const I1282STR_LEN: usize = 40;
-const U82STR_LEN: usize = 3;
-const U162STR_LEN: usize = 5;
-const U322STR_LEN: usize = 10;
-const U642STR_LEN: usize = 20;
-const U1282STR_LEN: usize = 39;
-const F2STR_LEN: usize = 24;
-
-const ISIZE2STR_SIZE: usize = match size_of::<isize>() {
+pub trait IntegerExt {
+    /// 最大整数字符串长度
+    const STR_MAX_LEN: usize;
+    /// 最小负整数的字节表示
+    const MIN_BYTE: &[u8];
+}
+macro_rules! impl_integer_ext_for_signed {
+    ($($ty:ident : $len:expr => $min_bytes:expr),* $(,)?) => {
+        $(
+            impl IntegerExt for $ty {
+                const STR_MAX_LEN: usize = $len;
+                const MIN_BYTE: &[u8] = $min_bytes;
+            }
+        )*
+    };
+}
+const ISIZE2STR_LEN: usize = match size_of::<isize>() {
     1 => 4usize,   // 8位系统：1字节
     2 => 6usize,   // 16位系统：2字节
     4 => 11usize,  // 32位系统：4字节
@@ -28,7 +32,7 @@ const USIZE2STR_LEN: usize = match size_of::<usize>() {
     16 => 39usize, // 128位系统：16字节
     _ => panic!("{}", "不支持的操作系统位数"),
 };
-const IUSIZE_MIN: &[u8] = match size_of::<isize>() {
+const ISIZE_MIN_BYTE: &[u8] = match size_of::<isize>() {
     1 => b"-128",                                      // 8位系统：1字节
     2 => b"-32768",                                    // 16位系统：2字节
     4 => b"-2147483648",                               // 32位系统：4字节
@@ -36,6 +40,23 @@ const IUSIZE_MIN: &[u8] = match size_of::<isize>() {
     16 => b"-170141183460469231731687303715884105728", // 128位系统：16字节
     _ => panic!("{}", "不支持的操作系统位数"),
 };
+
+impl_integer_ext_for_signed! {
+    i8  : 4 => b"-128",
+    i16 : 6 => b"-32768",
+    i32 : 11 => b"-2147483648",
+    i64 : 20 => b"-9223372036854775808",
+    i128: 40 => b"-170141183460469231731687303715884105728",
+    isize: ISIZE2STR_LEN => ISIZE_MIN_BYTE,
+    u8  : 3 => b"0",
+    u16 : 5 => b"0",
+    u32 : 10 => b"0",
+    u64 : 20 => b"0",
+    u128: 39 => b"0",
+    usize: USIZE2STR_LEN => b"0",
+}
+
+const F2STR_LEN: usize = 24;
 
 macro_rules! impl_itoa_signed {
     ($func_name:ident, $ty:ty, $buf_size:expr, $min_str:expr) => {
@@ -69,12 +90,13 @@ macro_rules! impl_itoa_signed {
         }
     };
 }
-impl_itoa_signed!(itoa_buf_i8, i8, I82STR_LEN, b"-128");
-impl_itoa_signed!(itoa_buf_i16, i16, I162STR_LEN, b"-32768");
-impl_itoa_signed!(itoa_buf_i32, i32, I322STR_LEN, b"-2147483648");
-impl_itoa_signed!(itoa_buf_i64, i64, I642STR_LEN, b"-9223372036854775808");
-impl_itoa_signed!(itoa_buf_i128, i128, I1282STR_LEN, b"-170141183460469231731687303715884105728");
-impl_itoa_signed!(itoa_buf_isize, isize, ISIZE2STR_SIZE, IUSIZE_MIN);
+
+impl_itoa_signed!(itoa_buf_i8, i8, i8::STR_MAX_LEN, i8::MIN_BYTE);
+impl_itoa_signed!(itoa_buf_i16, i16, i16::STR_MAX_LEN, i16::MIN_BYTE);
+impl_itoa_signed!(itoa_buf_i32, i32, i32::STR_MAX_LEN, i32::MIN_BYTE);
+impl_itoa_signed!(itoa_buf_i64, i64, i64::STR_MAX_LEN, i64::MIN_BYTE);
+impl_itoa_signed!(itoa_buf_i128, i128, i128::STR_MAX_LEN, i128::MIN_BYTE);
+impl_itoa_signed!(itoa_buf_isize, isize, isize::STR_MAX_LEN, isize::MIN_BYTE);
 
 macro_rules! impl_itoa_unsigned {
     ($func_name:ident, $ty:ty, $buf_size:expr) => {
@@ -94,12 +116,12 @@ macro_rules! impl_itoa_unsigned {
         }
     };
 }
-impl_itoa_unsigned!(itoa_buf_u8, u8, U82STR_LEN);
-impl_itoa_unsigned!(itoa_buf_u16, u16, U162STR_LEN);
-impl_itoa_unsigned!(itoa_buf_u32, u32, U322STR_LEN);
-impl_itoa_unsigned!(itoa_buf_u64, u64, U642STR_LEN);
-impl_itoa_unsigned!(itoa_buf_u128, u128, U1282STR_LEN);
-impl_itoa_unsigned!(itoa_buf_usize, usize, USIZE2STR_LEN);
+impl_itoa_unsigned!(itoa_buf_u8, u8, u8::STR_MAX_LEN);
+impl_itoa_unsigned!(itoa_buf_u16, u16, u16::STR_MAX_LEN);
+impl_itoa_unsigned!(itoa_buf_u32, u32, u32::STR_MAX_LEN);
+impl_itoa_unsigned!(itoa_buf_u64, u64, u64::STR_MAX_LEN);
+impl_itoa_unsigned!(itoa_buf_u128, u128, u128::STR_MAX_LEN);
+impl_itoa_unsigned!(itoa_buf_usize, usize, usize::STR_MAX_LEN);
 
 /// 将 f32 浮点数转换为字符串并写入缓冲区
 /// - 该函数将浮点数转换为字符串表示形式，支持特殊值（NAN、INFINITY等）的处理，
@@ -281,7 +303,7 @@ pub trait StaticSizeConcatParameter {
     fn concat_parameter(&self, s_ptr: *mut u8, var: &[u8], offset: &mut usize);
 }
 macro_rules! impl_static_size_concat_for_int {
-    ($type:ty, $len_const:ident, $itoa_fn:ident) => {
+    ($type:ty, $len_const:expr, $itoa_fn:ident) => {
         impl StaticSizeConcatParameter for $type {
             #[inline(always)]
             fn first_parameter_for_concat(self, bytes: &mut [u8]) -> (usize, &[u8]) {
@@ -298,24 +320,25 @@ macro_rules! impl_static_size_concat_for_int {
             }
             #[inline(always)]
             fn concat_parameter(&self, s_ptr: *mut u8, vb: &[u8], offset: &mut usize) {
-                unsafe {
-                    std::ptr::copy_nonoverlapping(vb.as_ptr(), s_ptr.add(*offset), vb.len());
-                }
+                unsafe { std::ptr::copy_nonoverlapping(vb.as_ptr(), s_ptr.add(*offset), vb.len()) };
                 *offset += vb.len();
             }
         }
     };
 }
-impl_static_size_concat_for_int!(i8, I82STR_LEN, itoa_buf_i8);
-impl_static_size_concat_for_int!(i16, I162STR_LEN, itoa_buf_i16);
-impl_static_size_concat_for_int!(i32, I322STR_LEN, itoa_buf_i32);
-impl_static_size_concat_for_int!(i64, I642STR_LEN, itoa_buf_i64);
-impl_static_size_concat_for_int!(i128, I1282STR_LEN, itoa_buf_i128);
-impl_static_size_concat_for_int!(u8, U82STR_LEN, itoa_buf_u8);
-impl_static_size_concat_for_int!(u16, U162STR_LEN, itoa_buf_u16);
-impl_static_size_concat_for_int!(u32, U322STR_LEN, itoa_buf_u32);
-impl_static_size_concat_for_int!(u64, U642STR_LEN, itoa_buf_u64);
-impl_static_size_concat_for_int!(u128, U1282STR_LEN, itoa_buf_u128);
+
+impl_static_size_concat_for_int!(i8, i8::STR_MAX_LEN, itoa_buf_i8);
+impl_static_size_concat_for_int!(i16, i16::STR_MAX_LEN, itoa_buf_i16);
+impl_static_size_concat_for_int!(i32, i32::STR_MAX_LEN, itoa_buf_i32);
+impl_static_size_concat_for_int!(i64, i64::STR_MAX_LEN, itoa_buf_i64);
+impl_static_size_concat_for_int!(i128, i128::STR_MAX_LEN, itoa_buf_i128);
+impl_static_size_concat_for_int!(isize, isize::STR_MAX_LEN, itoa_buf_isize);
+impl_static_size_concat_for_int!(u8, u8::STR_MAX_LEN, itoa_buf_u8);
+impl_static_size_concat_for_int!(u16, u16::STR_MAX_LEN, itoa_buf_u16);
+impl_static_size_concat_for_int!(u32, u32::STR_MAX_LEN, itoa_buf_u32);
+impl_static_size_concat_for_int!(u64, u64::STR_MAX_LEN, itoa_buf_u64);
+impl_static_size_concat_for_int!(u128, u128::STR_MAX_LEN, itoa_buf_u128);
+impl_static_size_concat_for_int!(usize, usize::STR_MAX_LEN, itoa_buf_usize);
 impl_static_size_concat_for_int!(f32, F2STR_LEN, ftoa_buf_f32);
 impl_static_size_concat_for_int!(f64, F2STR_LEN, ftoa_buf_f64);
 
@@ -392,8 +415,11 @@ pub trait VariableSizeConcatParameter {
     /// ```
     /// use proc_tools_core::utils_core::impl_to_ascii::VariableSizeConcatParameter;
     ///
-    /// let param1 = "hello";
+    /// let param0 = "hello";
+    /// let param1 = " ";
     /// let param2 = "world";
+    /// let mut bytes = [0u8; 40];
+    /// let (mut total_len, mut slice1) = param0.first_parameter_for_concat(&mut bytes);
     /// let mut bytes = [0u8; 40];
     /// let (mut total_len, mut slice1) = param1.first_parameter_for_concat(&mut bytes);
     /// let mut bytes = [0u8; 40];
@@ -406,8 +432,7 @@ pub trait VariableSizeConcatParameter {
     ///     param2.concat_parameter(s_ptr, &mut slice2, &mut offset);
     ///     result.as_mut_vec().set_len(offset);
     /// }
-    ///
-    /// assert_eq!(result, "helloworld");
+    /// assert_eq!(result, "hello world");
     /// ```
     fn concat_parameter(&self, s_ptr: *mut u8, buf: &[u8], offset: &mut usize);
 }

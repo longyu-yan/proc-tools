@@ -18,15 +18,15 @@ pub mod utils_core;
 ///
 /// # 示例
 /// ```rust
-/// use proc_tools_core::{concat_str};
+/// use proc_tools_core::concat_str;
 ///
 /// let base = "file";
 /// let ext1 = ".txt";
 /// let dir = "/home";
 /// let ext2 = ".zip";
 ///
-/// let result = concat_str!(base, ext1);                    // → "file.txt"
-/// let full_path = concat_str!(dir, "/", base, ext1, ext2); // → "/home/file.txt.zip"
+/// let result = concat_str!(base, ext1);
+/// let full_path = concat_str!(dir, "/", base, ext1, ext2);
 /// ```
 #[macro_export]
 macro_rules! concat_str {
@@ -41,6 +41,92 @@ macro_rules! concat_str {
             s.push_str($suffix);
         )+
         s
+    }};
+}
+
+/// 编译期拼接常量字符串
+/// - 在编译期间将多个字符串字面量拼接成一个静态字符串切片（`&'static str`）
+/// - 效率高于运行时的 `concat!` 或 `format!`，且结果可安全用作常量
+/// - 支持任意多个参数，参数必须是可被 `const` 求值的字符串表达式
+///
+/// # 语法
+/// - `const_concat!(s1, s2, ..., sN)` → `&'static str`
+/// - 参数个数至少为 1，可尾随逗号
+///
+/// # 参数
+/// - `$s:expr`: 字符串字面量或返回 `&str` 的常量表达式
+/// - `$($rest:expr),+`: 剩余字符串参数（一个或多个）
+///
+/// # 返回值
+/// - 返回 `&'static str` 类型的字符串切片，其内容为所有参数按顺序拼接的结果
+///
+/// # 错误类型
+/// - 该宏不会触发运行时错误；如果参数不是有效的 UTF-8 字符串，编译时将失败（但通常输入都是字面量）
+/// - 空参数列表（`const_concat!()`）允许，返回空字符串 `""`
+///
+/// # 注意
+/// - 所有参数必须是编译期可确定的字符串片段，例如字面量或 `const` 字符串引用
+/// - 宏内部使用递归和 `unsafe` 代码将拼接后的字节数组直接转为 `&str`，但它是安全的，因为输入保证是 UTF-8
+/// - 由于编译期生成，非常适合用于构建静态常量字符串，如文件路径、错误消息模板等
+///
+/// # 示例
+/// ```
+/// use proc_tools_core::const_concat;
+///
+/// const PATH: &str = const_concat!("foo/", "bar/", "baz.txt");
+/// assert_eq!(PATH, "foo/bar/baz.txt");
+///
+/// const PREFIX: &str = "Hello, ";
+/// const NAME: &str = "World";
+/// const GREETING: &str = const_concat!(PREFIX, NAME, "!");
+/// assert_eq!(GREETING, "Hello, World!");
+///
+/// let empty = const_concat!();
+/// assert_eq!(empty, "");
+/// ```
+#[macro_export]
+macro_rules! const_concat {
+    // 终结递归：空参数返回空字符串
+    () => {
+        ""
+    };
+    // 单个参数：直接返回自身
+    ($s:expr) => {{
+        const S: &str = $s;
+        S
+    }};
+    // 多个参数：递归展开，构建字节数组
+    ($s1:expr, $($rest:expr),+ $(,)?) => {{
+        const S1: &str = $s1;
+        // 递归调用获取剩余部分的拼接结果（也是一个 &'static str）
+        const REST: &str = $crate::const_concat!($($rest),+);
+
+        // 计算总长度
+        const LEN: usize = S1.len() + REST.len();
+        // 生成字节数组
+        const BYTES: [u8; LEN] = {
+            let s1_bytes = S1.as_bytes();
+            let rest_bytes = REST.as_bytes();
+            let mut arr = [0u8; LEN];
+            let mut idx = 0;
+            let mut i = 0;
+            // 复制第一个字符串的字节
+            while i < s1_bytes.len() {
+                arr[idx] = s1_bytes[i];
+                idx += 1;
+                i += 1;
+            }
+            // 复制剩余字符串的字节
+            i = 0;
+            while i < rest_bytes.len() {
+                arr[idx] = rest_bytes[i];
+                idx += 1;
+                i += 1;
+            }
+            arr
+        };
+        // 安全转换：每个部分都是有效 UTF-8，拼接后也是有效 UTF-8
+        unsafe { ::std::str::from_utf8_unchecked(&BYTES) }
     }};
 }
 
@@ -76,7 +162,8 @@ macro_rules! concat_str {
 ///   - 例如：对"abcde" 使用 [("bc", "Y"), ("abc", "X")] 进行替换，实际结果是 "Xde" ，因为 "abc" 比 "bc" 出现位置更靠前
 ///
 /// # 示例
-/// ```rust,ignore
+/// ```rust
+/// use proc_tools_core::replace_multiple_patterns;
 /// let input = "Hello world, welcome to Rust!";
 /// let patterns = [
 ///     ("world", "Earth"),

@@ -6,7 +6,6 @@ pub mod pretty;
 /// 使用的是ryu依赖库的算法
 ///
 /// PLDI'18会议论文《 Ryū: fast float-to-string conversion》（作者：Ulf Adams）包含了该算法的完整正确性证明。该论文采用知识共享CC-BY-SA许可证发布。
-
 pub(crate) static DOUBLE_POW5_INV_SPLIT: [(u64, u64); 342] = [
     (1, 2305843009213693952),
     (11068046444225730970, 1844674407370955161),
